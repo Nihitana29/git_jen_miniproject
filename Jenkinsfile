@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "mklf7/ubuntu-webserver"
+        IMAGE_NAME = "dylan/ubuntu-webserver"
         IMAGE_TAG = "${BUILD_NUMBER}"
         DOCKERHUB_CREDENTIALS = "dockerhub-credentials"
     }
