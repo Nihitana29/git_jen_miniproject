@@ -4,3 +4,4 @@ RUN apt update
 RUN apt install git -y
 
 EXPOSE 22
+CMD ["/bin/bash"]
