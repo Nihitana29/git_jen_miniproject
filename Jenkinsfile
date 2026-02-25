@@ -2,35 +2,48 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "nom_docker/image:tag" // Remplace par ton DockerHub username et nom d'image
-        DOCKERHUB_CREDENTIALS = "dockerhub-id" // ID du credential Jenkins pour DockerHub
+        IMAGE_NAME = "mklf7/ubuntu-webserver"
+        IMAGE_TAG = "${BUILD_NUMBER}"
+        DOCKERHUB_CREDENTIALS = "dockerhub-credentials"
     }
 
     stages {
 
-        stage('pull') {
+        stage('Pull base image') {
             steps {
-                echo "Pulling ubuntu:24.04 from DockerHub..."
-                sh "docker pull ubuntu:24.04"
-            }
-        }
-
-        stage('build') {
-            steps {
-                echo "Building Docker image ${DOCKER_IMAGE}..."
-                sh "docker build -t ${DOCKER_IMAGE} ."
-            }
-        }
-
-        stage('push') {
-            steps {
-                echo "Pushing Docker image to DockerHub..."
-                withCredentials([usernamePassword(credentialsId: "${DOCKERHUB_CREDENTIALS}", usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                    sh "echo $PASSWORD | docker login -u $USERNAME --password-stdin"
-                    sh "docker push ${DOCKER_IMAGE}"
+                script {
+                    sh 'docker pull ubuntu:24.04'
                 }
             }
         }
 
+        stage('Build image') {
+            steps {
+                script {
+                    sh """
+                        docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                    """
+                }
+            }
+        }
+
+        stage('Push to DockerHub') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(
+                        credentialsId: "${DOCKERHUB_CREDENTIALS}",
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )]) {
+
+                        sh """
+                            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                            docker push ${IMAGE_NAME}:${IMAGE_TAG}
+                            docker logout
+                        """
+                    }
+                }
+            }
+        }
     }
 }
