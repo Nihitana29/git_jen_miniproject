@@ -4,7 +4,6 @@ pipeline {
     environment {
         IMAGE_NAME = 'nihitana29/ubuntu-webserver'
         IMAGE_TAG = "${BUILD_NUMBER}"
-        // Utilisation de guillemets simples pour éviter toute interprétation inutile
         DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
     }
 
