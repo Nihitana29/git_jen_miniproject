@@ -12,7 +12,7 @@ pipeline {
         stage('Pull base image') {
             steps {
                 script {
-                    sh 'docker pull ubuntu:24.04'
+                    docker.image('ubuntu:24.04').pull()
                 }
             }
         }
