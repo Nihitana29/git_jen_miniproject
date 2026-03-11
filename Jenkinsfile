@@ -2,17 +2,17 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "nihitana29/ubuntu-webserver"
+        IMAGE_NAME = 'nihitana29/ubuntu-webserver'
         IMAGE_TAG = "${BUILD_NUMBER}"
-        DOCKERHUB_CREDENTIALS = "dockerhub-credentials" [cite: 2]
+        // Utilisation de guillemets simples pour éviter toute interprétation inutile
+        DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
     }
 
     stages {
         stage('Pull base image') {
             steps {
                 script {
-                    // Utilise la méthode native pour éviter l'erreur "command not found" 
-                    docker.image('ubuntu:24.04').pull() [cite: 3]
+                    sh 'docker pull ubuntu:24.04'
                 }
             }
         }
@@ -20,8 +20,7 @@ pipeline {
         stage('Build image') {
             steps {
                 script {
-                    // Construction de l'image en utilisant le contexte local [cite: 4]
-                    docker.build("${IMAGE_NAME}:${IMAGE_TAG}") [cite: 4]
+                    sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
                 }
             }
         }
@@ -29,9 +28,14 @@ pipeline {
         stage('Push to DockerHub') {
             steps {
                 script {
-                    // Gestion sécurisée des identifiants DockerHub [cite: 5, 6]
-                    docker.withRegistry('', DOCKERHUB_CREDENTIALS) {
-                        docker.image("${IMAGE_NAME}:${IMAGE_TAG}").push() [cite: 5, 7]
+                    withCredentials([usernamePassword(
+                        credentialsId: "${DOCKERHUB_CREDENTIALS}",
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )]) {
+                        sh "echo ${DOCKER_PASS} | docker login -u ${DOCKER_USER} --password-stdin"
+                        sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
+                        sh "docker logout"
                     }
                 }
             }
